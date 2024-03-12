@@ -2,6 +2,10 @@ import csv
 import sys 
 import pandas as pd
 from collections import defaultdict
+import pickle as pkl 
+
+def f():
+    return defaultdict(int)
 
 if __name__ == "__main__": 
 
@@ -10,12 +14,12 @@ if __name__ == "__main__":
     chrom = sys.argv[3]
     output_file_name = sys.argv[4]
 
-    MINIMUM_OCCURRENCES = 1
+    MINIMUM_OCCURRENCES = 2
 
     relevant_fams = pd.read_csv(fam_file, sep="\t", header=None)[0].astype(str).values
     map_coordinates = defaultdict(dict)
     cluster_id_to_count = defaultdict(int)
-    fam_dict =  defaultdict(lambda: defaultdict(int))
+    fam_dict =  defaultdict(f)
 
     with open(input_file, "r") as f: 
 
@@ -42,7 +46,7 @@ if __name__ == "__main__":
 
             i += 1
 
-    cluster_ids_that_meet_threshold = [cluster_id for cluster_id in map_coordinates if cluster_id_to_count[cluster_id] > MINIMUM_OCCURRENCES]
+    cluster_ids_that_meet_threshold = [cluster_id for cluster_id in map_coordinates if cluster_id_to_count[cluster_id] >= MINIMUM_OCCURRENCES]
 
     with open(f"{output_file_name}.map", "w") as output_file: 
         output_writer = csv.writer(output_file, delimiter=" ")
@@ -51,21 +55,30 @@ if __name__ == "__main__":
             line = map_coordinates[cluster_id]
             output_writer.writerow(line)
 
+    del map_coordinates
+
     diploid_cluster_ids = [item for pair in zip([f"{c}_0" for c in cluster_ids_that_meet_threshold], [f"{c}_1" for c in cluster_ids_that_meet_threshold]) for item in pair]
 
+    pkl.dump(cluster_ids_that_meet_threshold, open(f"{output_file_name}_cluster_ids_that_meet_threshold.pkl", "wb"))
+    pkl.dump(fam_dict, open(f"{output_file_name}_fam_dict.pkl", "wb"))
+    
     with open(f"{output_file_name}.ped", "w") as output_file:
-            fieldnames = ["ID"] + diploid_cluster_ids
+        fieldnames = ["ID", "FID", "PID", "MID", "SEX", "PHENO"] + diploid_cluster_ids
+        output_writer = csv.writer(output_file,  delimiter=" ")
+        # output_writer.writeheader()
 
-            output_writer = csv.DictWriter(output_file, fieldnames=fieldnames, delimiter=" ")
-            # output_writer.writeheader()
+        for fam in relevant_fams:
+            # Write data incrementally
+            row_list = [fam, fam, 0, 0, 0, -9]
 
-            for fam in relevant_fams:
-                row_dict = {"ID": fam}
+            for cluster_id in cluster_ids_that_meet_threshold:
+                # Write data for each cluster_id
+                row_list.append(fam_dict[fam][f"{cluster_id}_0"] + 1)
+                row_list.append(fam_dict[fam][f"{cluster_id}_1"] + 1)
 
-                for cluster_id in cluster_ids_that_meet_threshold: 
-                    row_dict.update({f"{cluster_id}_0": fam_dict [fam][f"{cluster_id}_0"]})
-                    row_dict.update({f"{cluster_id}_1": fam_dict [fam][f"{cluster_id}_1"]})
-                
-                print(row_dict)
-                
-                output_writer.writerow(row_dict)
+                # Update fam_dict
+                del fam_dict[fam][f"{cluster_id}_0"]
+                del fam_dict[fam][f"{cluster_id}_1"]
+
+            # Write the row to the output file
+            output_writer.writerow(row_list)
