@@ -59,8 +59,8 @@ if __name__ == "__main__":
 
     diploid_cluster_ids = [item for pair in zip([f"{c}_0" for c in cluster_ids_that_meet_threshold], [f"{c}_1" for c in cluster_ids_that_meet_threshold]) for item in pair]
 
-    pkl.dump(cluster_ids_that_meet_threshold, open(f"{output_file_name}_cluster_ids_that_meet_threshold.pkl", "wb"))
-    pkl.dump(fam_dict, open(f"{output_file_name}_fam_dict.pkl", "wb"))
+    # pkl.dump(cluster_ids_that_meet_threshold, open(f"{output_file_name}_cluster_ids_that_meet_threshold.pkl", "wb"))
+    # pkl.dump(fam_dict, open(f"{output_file_name}_fam_dict.pkl", "wb"))
     
     with open(f"{output_file_name}.ped", "w") as output_file:
         fieldnames = ["ID", "FID", "PID", "MID", "SEX", "PHENO"] + diploid_cluster_ids
