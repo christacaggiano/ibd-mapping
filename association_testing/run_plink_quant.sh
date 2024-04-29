@@ -1,29 +1,28 @@
 #!/bin/bash
 
-#BSUB -P acc_kennylab
-#BSUB -n 1
-#BSUB -W 12:00
-#BSUB -q premium
-#BSUB -R rusage[mem=60000]
-#BSUB -J "plink[1-22]"
-#BSUB -o /sc/arion/projects/igh/kennylab/christa/mapping_ibd/logs/plink.out.%J.%I 
-#BSUB -e /sc/arion/projects/igh/kennylab/christa/mapping_ibd/logs/plink.err.%J.%I 
 
-
-. /sc/arion/projects/igh/kennylab/christa/miniconda/etc/profile.d/conda.sh
+. /sc/arion/projects/igh/kennylab/christa/miniforge/etc/profile.d/conda.sh
 conda activate ibd
 
 chr=$LSB_JOBINDEX 
 
+output=$1
+pheno=$2
+covar=$3
+code=$4
+pop=$5
+num=$6
+
+
+# mkdir -p $output
 
 # ##### dash cc 
 
-pheno="comparison/height/height_pheno_vital.txt"
-input_file="height/dash_output/dashcc/cluster2_"$chr
-output_dir="comparison/height/dashcc/"
-output_file=$output_dir"/cluster2_"$chr
+# input_file="dash_output/"$pop"/dashcc/cluster"$num"_"$chr
+# output_dir=$output"/dashcc/"
+# output_file=$output_dir"/"$pop"_"$chr
 
-mkdir -p $output_dir
+# mkdir -p $output_dir
 
 # plink2 --bfile $input_file \
 #     --keep $pheno \
@@ -35,12 +34,11 @@ mkdir -p $output_dir
 
 ##### dash adv  
 
-pheno="comparison/height/height_pheno_vital.txt"
-input_file="height/dash_output/adv_redone/cluster2_"$chr
-output_dir="comparison/height/adv_redone/"
-output_file=$output_dir"/cluster2_"$chr
+# input_file="dash_output/"$pop"/adv_redone/cluster"$num"_"$chr
+# output_dir=$output"/adv_redone/"
+# output_file=$output_dir"/"$pop"_"$chr
 
-mkdir -p $output_dir
+# mkdir -p $output_dir
 
 # plink2 --bfile $input_file \
 #     --keep $pheno \
@@ -52,10 +50,9 @@ mkdir -p $output_dir
 
 ##### dash adv default
 
-pheno="comparison/height/height_pheno_vital.txt"
-input_file="height/dash_output/adv_default/cluster2_"$chr
-output_dir="comparison/height/adv_default/"
-output_file=$output_dir"/cluster2_"$chr
+# input_file="dash_output/"$pop"/adv_default/cluster"$num"_"$chr
+# output_dir=$output"/adv_default/"
+# output_file=$output_dir"/"$pop"_"$chr
 
 # mkdir -p $output_dir
 
@@ -64,24 +61,25 @@ output_file=$output_dir"/cluster2_"$chr
 #     --geno-counts \
 #     --pheno $pheno \
 #     --glm recessive \
-#     --out $output_file
+    # --out $output_file
 
 
 ##### icurl 
 
-pheno="comparison/height/height_pheno_vital.txt"
-input_file="icurl/libd/pr_only/redone/cluster2_"$chr
-output_dir="comparison/height/icurl/"
-output_file=$output_dir"/cluster2_"$chr
+input_file="icurl/libd/"$pop"/cluster"$num"_"$chr
+output_dir=$output"/icurl/"
+output_file=$output_dir"/"$pop"_"$chr
 
-# mkdir -p $output_dir
 
-# plink2 --bfile $input_file \
-#     --keep $pheno \
-#     --geno-counts \
-#     --pheno $pheno \
-#     --glm recessive \
-#     --out $output_file
+mkdir -p $output_dir
+
+plink2 --bfile $input_file \
+    --keep $pheno \
+    --pheno-name $code \
+    --geno-counts \
+    --pheno $pheno \
+    --glm recessive \
+    --out $output_file
 
 
 
